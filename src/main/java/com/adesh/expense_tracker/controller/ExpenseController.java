@@ -1,51 +1,37 @@
 package com.adesh.expense_tracker.controller;
 
-import com.adesh.expense_tracker.dto.ExpenseRequest;
-import com.adesh.expense_tracker.entity.Category;
 import com.adesh.expense_tracker.entity.Expense;
-import com.adesh.expense_tracker.repository.CategoryRepository;
-import com.adesh.expense_tracker.repository.ExpenseRepository;
+import com.adesh.expense_tracker.service.ExpenseService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/expenses")
 public class ExpenseController {
 
-    private final ExpenseRepository expenseRepository;
-    private final CategoryRepository categoryRepository;
+    @Autowired
+    private ExpenseService expenseService;
 
-    public ExpenseController(
-            ExpenseRepository expenseRepository,
-            CategoryRepository categoryRepository
-    ) {
-        this.expenseRepository = expenseRepository;
-        this.categoryRepository = categoryRepository;
-    }
-
-    // POST /expenses
+    // POST - add expense
     @PostMapping
-    public Expense createExpense(@RequestBody ExpenseRequest request) {
-
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
-        Expense expense = new Expense();
-        expense.setTitle(request.getTitle());
-        expense.setAmount(request.getAmount());
-        expense.setCategory(category);
-
-        return expenseRepository.save(expense);
+    public Expense addExpense(@RequestBody Expense expense) {
+        return expenseService.addExpense(expense);
     }
 
-    public ExpenseRepository getExpenseRepository() {
-        return expenseRepository;
+    // GET - category summary
+    @GetMapping("/summary/category")
+    public Map<String, Double> categorySummary() {
+        return expenseService.getCategorySummary();
     }
 
-    // GET /expenses
-    @GetMapping
-    public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
+    // GET - monthly summary
+    @GetMapping("/summary/monthly")
+    public Double monthlySummary(
+            @RequestParam int month,
+            @RequestParam int year) {
+
+        return expenseService.getMonthlySummary(month, year);
     }
 }

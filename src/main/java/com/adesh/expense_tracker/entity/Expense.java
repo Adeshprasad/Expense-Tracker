@@ -3,10 +3,23 @@ package com.adesh.expense_tracker.entity;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.time.LocalDate;
+
 
 @Entity
 @Table(name = "expenses")
 public class Expense {
+
+    private LocalDate expenseDate;
+
+    public LocalDate getExpenseDate() {
+        return expenseDate;
+    }
+
+    public void setExpenseDate(LocalDate expenseDate) {
+        this.expenseDate = expenseDate;
+    }
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
