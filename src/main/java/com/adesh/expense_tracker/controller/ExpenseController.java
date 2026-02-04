@@ -1,37 +1,35 @@
 package com.adesh.expense_tracker.controller;
 
+import com.adesh.expense_tracker.dto.ExpenseRequest;
+import com.adesh.expense_tracker.dto.ExpenseResponseDTO;
 import com.adesh.expense_tracker.entity.Expense;
 import com.adesh.expense_tracker.service.ExpenseService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/expenses")
 public class ExpenseController {
 
-    @Autowired
-    private ExpenseService expenseService;
+    private final ExpenseService expenseService;
 
-    // POST - add expense
+    public ExpenseController(ExpenseService expenseService) {
+        this.expenseService = expenseService;
+    }
+
+    // ✅ POST - create expense
     @PostMapping
-    public Expense addExpense(@RequestBody Expense expense) {
-        return expenseService.addExpense(expense);
+    public ResponseEntity<Expense> addExpense(
+            @Valid @RequestBody ExpenseRequest request) {
+        return ResponseEntity.ok(expenseService.addExpense(request));
     }
 
-    // GET - category summary
-    @GetMapping("/summary/category")
-    public Map<String, Double> categorySummary() {
-        return expenseService.getCategorySummary();
-    }
-
-    // GET - monthly summary
-    @GetMapping("/summary/monthly")
-    public Double monthlySummary(
-            @RequestParam int month,
-            @RequestParam int year) {
-
-        return expenseService.getMonthlySummary(month, year);
+    // ✅ GET - fetch all expenses
+    @GetMapping
+    public ResponseEntity<List<ExpenseResponseDTO>> getAllExpenses() {
+        return ResponseEntity.ok(expenseService.getAllExpenses());
     }
 }
