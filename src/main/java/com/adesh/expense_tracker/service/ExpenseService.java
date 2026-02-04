@@ -7,6 +7,7 @@ import com.adesh.expense_tracker.entity.Expense;
 import com.adesh.expense_tracker.exception.CategoryNotFoundException;
 import com.adesh.expense_tracker.repository.CategoryRepository;
 import com.adesh.expense_tracker.repository.ExpenseRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,6 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class ExpenseService {
@@ -30,7 +35,7 @@ public class ExpenseService {
     }
 
     // ===============================
-    // CREATE EXPENSE (DAY 7 FINAL)
+    // CREATE EXPENSE (DAY 7 + FIXED)
     // ===============================
     public Expense addExpense(ExpenseRequest request) {
 
@@ -41,6 +46,7 @@ public class ExpenseService {
         Expense expense = new Expense();
         expense.setTitle(request.getTitle());
         expense.setAmount(request.getAmount());
+        expense.setExpenseDate(LocalDate.now()); // ✅ FIX IS HERE
         expense.setCategory(category);
 
         return expenseRepository.save(expense);
@@ -57,8 +63,59 @@ public class ExpenseService {
     }
 
     // ===============================
-    // FILTERING (DAY 6)
+    // PAGINATION & SORTING (DAY 8)
     // ===============================
+    public Page<ExpenseResponseDTO> getExpensesPaginated(
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        return expenseRepository.findAll(pageRequest)
+                .map(this::mapToDTO);
+    }
+
+
+
+    public Page<ExpenseResponseDTO> searchExpenses(
+            LocalDate startDate,
+            LocalDate endDate,
+            Long categoryId,
+            Double minAmount,
+            Double maxAmount,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+
+        Category category = null;
+        if (categoryId != null) {
+            category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() ->
+                            new CategoryNotFoundException("Category not found"));
+        }
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return expenseRepository
+                .filterExpenses(startDate, endDate, category, minAmount, maxAmount, pageable)
+                .map(this::mapToDTO);
+    }
+
+
+
     public List<ExpenseResponseDTO> filterExpenses(
             LocalDate startDate,
             LocalDate endDate,

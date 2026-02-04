@@ -2,6 +2,8 @@ package com.adesh.expense_tracker.repository;
 
 import com.adesh.expense_tracker.entity.Category;
 import com.adesh.expense_tracker.entity.Expense;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -50,4 +52,23 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             @Param("month") int month,
             @Param("year") int year
     );
+
+
+    @Query("""
+    SELECT e FROM Expense e
+    WHERE (:startDate IS NULL OR e.expenseDate >= :startDate)
+      AND (:endDate IS NULL OR e.expenseDate <= :endDate)
+      AND (:category IS NULL OR e.category = :category)
+      AND (:minAmount IS NULL OR e.amount >= :minAmount)
+      AND (:maxAmount IS NULL OR e.amount <= :maxAmount)
+""")
+    Page<Expense> filterExpenses(
+            LocalDate startDate,
+            LocalDate endDate,
+            Category category,
+            Double minAmount,
+            Double maxAmount,
+            Pageable pageable
+    );
+
 }
